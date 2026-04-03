@@ -88,7 +88,9 @@ export default function App() {
       if (aOverdue && !bOverdue) return -1;
       if (!aOverdue && bOverdue) return 1;
       
-      return new Date(b.dataEmprestimo).getTime() - new Date(a.dataEmprestimo).getTime();
+      // For both overdue and non-overdue, show the one with the due date closest to today first
+      // This means sorting by dataDevolucaoPrevista in ascending order
+      return new Date(a.dataDevolucaoPrevista).getTime() - new Date(b.dataDevolucaoPrevista).getTime();
     });
     if (loanSearchCpf) {
       result = result.filter(l => l.cidadaoCpf.includes(loanSearchCpf));
@@ -1055,12 +1057,12 @@ WHERE E.data_devolucao_real IS NULL;`}
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Título do Livro</label>
-                    <input name="livroTitulo" list="books-list" required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                    <datalist id="books-list">
+                    <select name="livroTitulo" required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                      <option value="">Selecione um livro...</option>
                       {books.filter(b => b.status === 'disponivel').map(b => (
-                        <option key={b.id} value={b.titulo} />
+                        <option key={b.id} value={b.titulo}>{b.titulo}</option>
                       ))}
-                    </datalist>
+                    </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
