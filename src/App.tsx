@@ -22,7 +22,8 @@ import {
   FileText,
   ChevronRight,
   DatabaseZap,
-  LogOut
+  LogOut,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -57,49 +58,34 @@ export default function App() {
   const [selectedCitizenName, setSelectedCitizenName] = useState('');
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginStep, setLoginStep] = useState<'cpf' | 'otp'>('cpf');
-  const [loginCpf, setLoginCpf] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [sentOtp, setSentOtp] = useState('');
   const [currentUser, setCurrentUser] = useState<EmployeeType | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLoginCpf = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     const formData = new FormData(e.currentTarget);
     const cpf = formData.get('cpf') as string;
+    const password = formData.get('password') as string;
     
     const employee = employees.find(emp => emp.cpf === cpf);
+    
     if (employee) {
-      setLoginCpf(cpf);
-      setCurrentUser(employee);
-      // Simulate sending OTP
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setSentOtp(code);
-      setLoginStep('otp');
-      console.log(`[SIMULATION] Código enviado para o WhatsApp de ${employee.nome}: ${code}`);
+      if (employee.senha === password) {
+        setCurrentUser(employee);
+        setIsAuthenticated(true);
+      } else {
+        setError('Senha incorreta.');
+      }
     } else {
       setError('CPF não encontrado no quadro de funcionários.');
     }
   };
 
-  const handleLoginOtp = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    if (otpCode === sentOtp) {
-      setIsAuthenticated(true);
-    } else {
-      setError('Código inválido. Verifique o código enviado ao seu WhatsApp.');
-    }
-  };
-
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setLoginStep('cpf');
-    setLoginCpf('');
-    setOtpCode('');
-    setSentOtp('');
     setCurrentUser(null);
+    setError(null);
   };
 
   const calculateAge = (birthDate: string) => {
@@ -151,8 +137,6 @@ export default function App() {
     activeLoans: loans.filter(l => !l.dataDevolucaoReal).length,
     totalCitizens: citizens.length
   };
-
-  const [error, setError] = useState<string | null>(null);
 
   const handleSaveBook = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -238,6 +222,7 @@ export default function App() {
       setor: formData.get('setor') as string,
       cpf: formData.get('cpf') as string,
       telefone: formData.get('telefone') as string,
+      senha: (formData.get('senha') as string) || '123456',
     };
 
     if (editingEmployee) {
@@ -1283,6 +1268,10 @@ WHERE E.data_devolucao_real IS NULL;`}
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Telefone</label>
                       <input name="telefone" defaultValue={editingEmployee?.telefone} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Senha de Acesso</label>
+                      <input name="senha" type="password" defaultValue={editingEmployee?.senha || '123456'} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    </div>
                   </div>
                   <div className="pt-4 flex gap-3">
                     <button type="button" onClick={() => setIsEmployeeModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50">Cancelar</button>
@@ -1313,24 +1302,24 @@ WHERE E.data_devolucao_real IS NULL;`}
         </div>
 
         <div className="p-8">
-          {loginStep === 'cpf' ? (
-            <form onSubmit={handleLoginCpf} className="space-y-6">
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-slate-900">Acesso Restrito</h2>
-                <p className="text-sm text-slate-500 mt-1">Identifique-se com seu CPF para continuar</p>
-              </div>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-xl font-bold text-slate-900">Acesso Restrito</h2>
+              <p className="text-sm text-slate-500 mt-1">Identifique-se para continuar</p>
+            </div>
 
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium rounded-lg flex items-center gap-2"
-                >
-                  <XCircle className="w-4 h-4 shrink-0" />
-                  {error}
-                </motion.div>
-              )}
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium rounded-lg flex items-center gap-2"
+              >
+                <XCircle className="w-4 h-4 shrink-0" />
+                {error}
+              </motion.div>
+            )}
 
+            <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">CPF do Funcionário</label>
                 <div className="relative">
@@ -1339,74 +1328,33 @@ WHERE E.data_devolucao_real IS NULL;`}
                     name="cpf" 
                     required 
                     placeholder="000.000.000-00"
-                    className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-lg"
+                    className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
                   />
                 </div>
               </div>
 
-              <button 
-                type="submit"
-                className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-[0.98]"
-              >
-                Solicitar Código de Acesso
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleLoginOtp} className="space-y-6">
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-slate-900">Verificação de Segurança</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Enviamos um código para o WhatsApp de <br/>
-                  <span className="font-bold text-slate-900">{currentUser?.nome}</span>
-                </p>
-              </div>
-
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium rounded-lg flex items-center gap-2"
-                >
-                  <XCircle className="w-4 h-4 shrink-0" />
-                  {error}
-                </motion.div>
-              )}
-
-              <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
-                <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest text-center mb-2">Simulação de WhatsApp</p>
-                <p className="text-sm text-blue-800 text-center font-mono font-bold tracking-[0.5em]">{sentOtp}</p>
-              </div>
-
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Código de 6 dígitos</label>
-                <input 
-                  type="text"
-                  maxLength={6}
-                  required 
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  placeholder="000000"
-                  className="w-full px-4 py-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center text-3xl font-black tracking-[0.5em]"
-                />
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Senha</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input 
+                    name="password" 
+                    type="password"
+                    required 
+                    placeholder="••••••"
+                    className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                  />
+                </div>
               </div>
+            </div>
 
-              <div className="flex flex-col gap-3">
-                <button 
-                  type="submit"
-                  className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98]"
-                >
-                  Entrar no Sistema
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => { setLoginStep('cpf'); setError(null); }}
-                  className="w-full py-3 text-slate-500 text-sm font-bold hover:text-slate-700 transition-colors"
-                >
-                  Voltar e alterar CPF
-                </button>
-              </div>
-            </form>
-          )}
+            <button 
+              type="submit"
+              className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-[0.98]"
+            >
+              Entrar no Sistema
+            </button>
+          </form>
         </div>
       </motion.div>
     </div>
