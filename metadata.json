@@ -1,0 +1,5 @@
+{
+  "name": "Giroteca de Mesquita",
+  "description": "Sistema de gestão para a biblioteca municipal Giroteca de Mesquita, incluindo controle de livros, cidadãos, funcionários e empréstimos.",
+  "requestFramePermissions": []
+}
