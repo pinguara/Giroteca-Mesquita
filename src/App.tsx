@@ -21,7 +21,8 @@ import {
   LayoutDashboard,
   FileText,
   ChevronRight,
-  DatabaseZap
+  DatabaseZap,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -54,6 +55,52 @@ export default function App() {
   const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
   const [birthDate, setBirthDate] = useState('');
   const [selectedCitizenName, setSelectedCitizenName] = useState('');
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginStep, setLoginStep] = useState<'cpf' | 'otp'>('cpf');
+  const [loginCpf, setLoginCpf] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [sentOtp, setSentOtp] = useState('');
+  const [currentUser, setCurrentUser] = useState<EmployeeType | null>(null);
+
+  const handleLoginCpf = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    const formData = new FormData(e.currentTarget);
+    const cpf = formData.get('cpf') as string;
+    
+    const employee = employees.find(emp => emp.cpf === cpf);
+    if (employee) {
+      setLoginCpf(cpf);
+      setCurrentUser(employee);
+      // Simulate sending OTP
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setSentOtp(code);
+      setLoginStep('otp');
+      console.log(`[SIMULATION] Código enviado para o WhatsApp de ${employee.nome}: ${code}`);
+    } else {
+      setError('CPF não encontrado no quadro de funcionários.');
+    }
+  };
+
+  const handleLoginOtp = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    if (otpCode === sentOtp) {
+      setIsAuthenticated(true);
+    } else {
+      setError('Código inválido. Verifique o código enviado ao seu WhatsApp.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setLoginStep('cpf');
+    setLoginCpf('');
+    setOtpCode('');
+    setSentOtp('');
+    setCurrentUser(null);
+  };
 
   const calculateAge = (birthDate: string) => {
     if (!birthDate) return 0;
@@ -178,6 +225,12 @@ export default function App() {
   const handleSaveEmployee = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+
+    if (currentUser?.setor !== 'Administrador') {
+      setError('Apenas administradores podem gerenciar funcionários.');
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const employeeData: EmployeeType = {
       id: editingEmployee ? editingEmployee.id : Math.max(0, ...employees.map(emp => emp.id)) + 1,
@@ -202,6 +255,10 @@ export default function App() {
   };
 
   const handleDeleteEmployee = (id: number) => {
+    if (currentUser?.setor !== 'Administrador') {
+      alert('Apenas administradores podem excluir funcionários.');
+      return;
+    }
     setEmployees(prev => prev.filter(emp => emp.id !== id));
   };
 
@@ -273,6 +330,19 @@ export default function App() {
 
   const renderDashboard = () => (
     <div className="space-y-8">
+      {/* Welcome Banner */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl shadow-slate-900/20"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl -mr-32 -mt-32" />
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black tracking-tight mb-2 font-display">Bem-vindo, {currentUser?.nome}!</h2>
+          <p className="text-slate-400 font-medium max-w-md">Você está logado como <span className="text-blue-400 font-bold">{currentUser?.setor}</span>. O sistema está pronto para uso.</p>
+        </div>
+      </motion.div>
+
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900 font-display">Painel Giroteca</h1>
@@ -1120,98 +1190,231 @@ WHERE E.data_devolucao_real IS NULL;`}
     </div>
   );
 
-  const renderEmployee = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-slate-900">Funcionário</h2>
-        <button 
-          onClick={() => { setEditingEmployee(null); setIsEmployeeModalOpen(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
-        >
-          <Plus className="w-4 h-4" /> Novo Funcionário
-        </button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {employees.map((emp) => (
-          <div key={emp.id} className="glass-card p-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                <UserCheck className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900">{emp.nome}</h3>
-                <p className="text-sm text-slate-500">{emp.setor}</p>
-                <p className="text-[10px] font-mono text-slate-400 mt-1">ID: #{emp.id} | CPF: {emp.cpf}</p>
-                <p className="text-[10px] text-slate-400">TEL: {emp.telefone}</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <button 
-                onClick={() => { setEditingEmployee(emp); setIsEmployeeModalOpen(true); }}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <History className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => handleDeleteEmployee(emp.id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <XCircle className="w-4 h-4" />
-              </button>
-            </div>
+  const renderEmployee = () => {
+    if (currentUser?.setor !== 'Administrador') {
+      return (
+        <div className="h-[60vh] flex flex-col items-center justify-center text-center p-8">
+          <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mb-6">
+            <Shield className="w-10 h-10 text-red-500" />
           </div>
-        ))}
-      </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Acesso Restrito</h2>
+          <p className="text-slate-500 max-w-md">Desculpe, apenas usuários com perfil de <strong>Administrador</strong> podem acessar e gerenciar o quadro de funcionários.</p>
+        </div>
+      );
+    }
 
-      {/* Employee Modal */}
-      <AnimatePresence>
-        {isEmployeeModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden"
-            >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-lg font-bold">{editingEmployee ? 'Editar Funcionário' : 'Novo Funcionário'}</h3>
-                <button onClick={() => setIsEmployeeModalOpen(false)} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5" /></button>
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-slate-900">Funcionário</h2>
+          <button 
+            onClick={() => { setEditingEmployee(null); setIsEmployeeModalOpen(true); }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> Novo Funcionário
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {employees.map((emp) => (
+            <div key={emp.id} className="glass-card p-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                  <UserCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">{emp.nome}</h3>
+                  <p className="text-sm text-slate-500">{emp.setor}</p>
+                  <p className="text-[10px] font-mono text-slate-400 mt-1">ID: #{emp.id} | CPF: {emp.cpf}</p>
+                  <p className="text-[10px] text-slate-400">TEL: {emp.telefone}</p>
+                </div>
               </div>
-              <form onSubmit={handleSaveEmployee} className="p-6 space-y-4">
-                {error && (
-                  <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium rounded-lg">
-                    {error}
-                  </div>
-                )}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nome Completo</label>
-                    <input name="nome" defaultValue={editingEmployee?.nome} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CPF</label>
-                    <input name="cpf" defaultValue={editingEmployee?.cpf} required placeholder="000.000.000-00" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Setor</label>
-                    <input name="setor" defaultValue={editingEmployee?.setor} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Telefone</label>
-                    <input name="telefone" defaultValue={editingEmployee?.telefone} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                  </div>
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={() => { setEditingEmployee(emp); setIsEmployeeModalOpen(true); }}
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  <History className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => handleDeleteEmployee(emp.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Employee Modal */}
+        <AnimatePresence>
+          {isEmployeeModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden"
+              >
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-lg font-bold">{editingEmployee ? 'Editar Funcionário' : 'Novo Funcionário'}</h3>
+                  <button onClick={() => setIsEmployeeModalOpen(false)} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5" /></button>
                 </div>
-                <div className="pt-4 flex gap-3">
-                  <button type="button" onClick={() => setIsEmployeeModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50">Cancelar</button>
-                  <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">Salvar</button>
-                </div>
-              </form>
-            </motion.div>
+                <form onSubmit={handleSaveEmployee} className="p-6 space-y-4">
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium rounded-lg">
+                      {error}
+                    </div>
+                  )}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nome Completo</label>
+                      <input name="nome" defaultValue={editingEmployee?.nome} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CPF</label>
+                      <input name="cpf" defaultValue={editingEmployee?.cpf} required placeholder="000.000.000-00" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Setor</label>
+                      <input name="setor" defaultValue={editingEmployee?.setor} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Telefone</label>
+                      <input name="telefone" defaultValue={editingEmployee?.telefone} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    </div>
+                  </div>
+                  <div className="pt-4 flex gap-3">
+                    <button type="button" onClick={() => setIsEmployeeModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50">Cancelar</button>
+                    <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">Salvar</button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  const renderLogin = () => (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden"
+      >
+        <div className="p-8 bg-slate-900 text-white text-center">
+          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+            <Book className="w-8 h-8 text-white" />
           </div>
-        )}
-      </AnimatePresence>
+          <h1 className="text-3xl font-black tracking-tighter mb-2">GIROTECA</h1>
+          <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Sistema de Gestão</p>
+        </div>
+
+        <div className="p-8">
+          {loginStep === 'cpf' ? (
+            <form onSubmit={handleLoginCpf} className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-bold text-slate-900">Acesso Restrito</h2>
+                <p className="text-sm text-slate-500 mt-1">Identifique-se com seu CPF para continuar</p>
+              </div>
+
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium rounded-lg flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </motion.div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">CPF do Funcionário</label>
+                <div className="relative">
+                  <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input 
+                    name="cpf" 
+                    required 
+                    placeholder="000.000.000-00"
+                    className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-lg"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-[0.98]"
+              >
+                Solicitar Código de Acesso
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleLoginOtp} className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-bold text-slate-900">Verificação de Segurança</h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Enviamos um código para o WhatsApp de <br/>
+                  <span className="font-bold text-slate-900">{currentUser?.nome}</span>
+                </p>
+              </div>
+
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium rounded-lg flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </motion.div>
+              )}
+
+              <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
+                <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest text-center mb-2">Simulação de WhatsApp</p>
+                <p className="text-sm text-blue-800 text-center font-mono font-bold tracking-[0.5em]">{sentOtp}</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Código de 6 dígitos</label>
+                <input 
+                  type="text"
+                  maxLength={6}
+                  required 
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder="000000"
+                  className="w-full px-4 py-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center text-3xl font-black tracking-[0.5em]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button 
+                  type="submit"
+                  className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+                >
+                  Entrar no Sistema
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => { setLoginStep('cpf'); setError(null); }}
+                  className="w-full py-3 text-slate-500 text-sm font-bold hover:text-slate-700 transition-colors"
+                >
+                  Voltar e alterar CPF
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
+
+  if (!isAuthenticated) {
+    return renderLogin();
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -1223,6 +1426,13 @@ WHERE E.data_devolucao_real IS NULL;`}
           </div>
           <h1 className="text-[48px] font-black text-slate-900 tracking-tighter leading-none font-display">GIROTECA</h1>
         </div>
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-bold text-sm"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="hidden sm:inline">Sair do Sistema</span>
+        </button>
       </header>
 
       <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
@@ -1235,10 +1445,10 @@ WHERE E.data_devolucao_real IS NULL;`}
                 { id: 'loan', label: 'Empréstimo', icon: ClipboardList },
                 { id: 'citizen', label: 'Cidadão', icon: Users },
                 { id: 'book', label: 'Livro', icon: Book },
-                { id: 'employee', label: 'Funcionário', icon: UserCheck },
+                { id: 'employee', label: 'Funcionário', icon: UserCheck, adminOnly: true },
                 { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
                 { id: 'documentation', label: 'Projeto BD', icon: FileText },
-              ].map((item) => (
+              ].filter(item => !item.adminOnly || currentUser?.setor === 'Administrador').map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id as any)}
@@ -1258,15 +1468,18 @@ WHERE E.data_devolucao_real IS NULL;`}
           <div className="mt-auto p-8 border-t border-slate-100 bg-slate-50/50">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-xs font-black text-white shadow-lg shadow-slate-900/20">
-                RL
+                {currentUser?.nome.charAt(0)}
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm font-bold text-slate-900 truncate">Ramon Lameira</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Administrador</p>
+                <p className="text-sm font-bold text-slate-900 truncate">{currentUser?.nome}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">{currentUser?.setor}</p>
               </div>
             </div>
-            <button className="w-full py-3 rounded-xl text-xs font-black text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center gap-2 border border-transparent hover:border-red-100">
-              Sair do Sistema
+            <button 
+              onClick={handleLogout}
+              className="w-full py-3 rounded-xl text-xs font-black text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center gap-2 border border-transparent hover:border-red-100"
+            >
+              <XCircle className="w-4 h-4" /> Sair do Sistema
             </button>
           </div>
         </aside>

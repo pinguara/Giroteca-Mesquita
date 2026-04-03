@@ -72,6 +72,7 @@ export const INITIAL_BOOKS: BookType[] = [
 export const INITIAL_EMPLOYEES: EmployeeType[] = [
   { id: 1, nome: "Ana Souza", setor: "Biblioteca", cpf: "111.222.333-44", telefone: "(21) 99999-8888" },
   { id: 2, nome: "Carlos Lima", setor: "Administração", cpf: "555.666.777-88", telefone: "(21) 98888-7777" },
+  { id: 3, nome: "Ramon Lameira", setor: "Administrador", cpf: "15074693730", telefone: "2198132744" },
 ];
 
 export const INITIAL_CITIZENS: CitizenType[] = [
