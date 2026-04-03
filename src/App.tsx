@@ -81,7 +81,15 @@ export default function App() {
   );
 
   const filteredLoans = useMemo(() => {
-    let result = [...loans].sort((a, b) => new Date(b.dataEmprestimo).getTime() - new Date(a.dataEmprestimo).getTime());
+    let result = [...loans].sort((a, b) => {
+      const aOverdue = isOverdue(a);
+      const bOverdue = isOverdue(b);
+      
+      if (aOverdue && !bOverdue) return -1;
+      if (!aOverdue && bOverdue) return 1;
+      
+      return new Date(b.dataEmprestimo).getTime() - new Date(a.dataEmprestimo).getTime();
+    });
     if (loanSearchCpf) {
       result = result.filter(l => l.cidadaoCpf.includes(loanSearchCpf));
     }
@@ -1212,14 +1220,6 @@ WHERE E.data_devolucao_real IS NULL;`}
             <Book className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-[48px] font-black text-slate-900 tracking-tighter leading-none font-display">GIROTECA</h1>
-        </div>
-        <div className="bg-white/50 p-2 rounded-xl border border-white/20 shadow-sm transition-all hover:shadow-md hover:scale-105 duration-300">
-          <img 
-            src="https://raw.githubusercontent.com/ramonlameira/Giroteca/main/logo_mesquita.png" 
-            alt="Prefeitura de Mesquita" 
-            className="h-16 w-auto object-contain"
-            referrerPolicy="no-referrer"
-          />
         </div>
       </header>
 
