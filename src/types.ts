@@ -1,4 +1,4 @@
-import { Book, Users, UserCheck, ClipboardList, Database, Shield, History, Info } from 'lucide-react';
+import { Book, Users, UserCheck, ClipboardList, Database, Shield, History, Info, Trophy, Compass, Clock, Award, LucideIcon } from 'lucide-react';
 
 export interface BookType {
   id: number;
@@ -43,7 +43,31 @@ export interface LoanType {
   dataEmprestimo: string;
   dataDevolucaoPrevista: string;
   dataDevolucaoReal?: string;
+  rating?: number;
+  comment?: string;
 }
+
+export interface ReservationType {
+  id: number;
+  livroId: number;
+  cidadaoCpf: string;
+  dataReserva: string;
+  status: 'pendente' | 'notificado' | 'cancelado' | 'concluido';
+}
+
+export interface BadgeType {
+  id: string;
+  nome: string;
+  descricao: string;
+  icon: LucideIcon;
+}
+
+export const BADGES: BadgeType[] = [
+  { id: 'reader_month', nome: 'Leitor do Mês', descricao: 'Realizou mais de 5 empréstimos no mês', icon: Trophy },
+  { id: 'theme_explorer', nome: 'Explorador de Temas', descricao: 'Leu livros de 3 temas diferentes', icon: Compass },
+  { id: 'punctual', nome: 'Pontual', descricao: 'Devolveu todos os livros no prazo', icon: Clock },
+  { id: 'veteran', nome: 'Veterano', descricao: 'Mais de 1 ano cadastrado no sistema', icon: Award },
+];
 
 export const INITIAL_BOOKS: BookType[] = [
   { 
@@ -98,6 +122,19 @@ export const INITIAL_CITIZENS: CitizenType[] = [
     responsavel: "Roberto Oliveira", 
     cpfResponsavel: "111.222.333-44",
     telefoneResponsavel: "(21) 96666-5555", 
+    bloqueado: false 
+  },
+  { 
+    id: 3,
+    cpf: "MENOR-3", 
+    nome: "Pedro Santos", 
+    email: "pedro@email.com", 
+    telefone: "(21) 95555-4444", 
+    endereco: "Rua das Flores, 50, Mesquita - RJ", 
+    dataNascimento: "2015-03-10", 
+    responsavel: "Ana Santos", 
+    cpfResponsavel: "222.333.444-55",
+    telefoneResponsavel: "(21) 94444-3333", 
     bloqueado: false 
   },
 ];
