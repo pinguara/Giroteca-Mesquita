@@ -97,6 +97,7 @@ export default function App() {
   const [historyCitizen, setHistoryCitizen] = useState<CitizenType | null>(null);
   const [birthDate, setBirthDate] = useState('');
   const [selectedCitizenName, setSelectedCitizenName] = useState('');
+  const [selectedLoanTitle, setSelectedLoanTitle] = useState<string>('');
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<EmployeeType | null>(null);
@@ -284,6 +285,7 @@ export default function App() {
   const handleSaveBook = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const quantidade = Number(formData.get('quantidade') || 1);
     const bookData: Partial<BookType> = {
       titulo: formData.get('titulo') as string,
       autor: formData.get('autor') as string,
@@ -297,12 +299,17 @@ export default function App() {
     if (editingBook) {
       setBooks(prev => prev.map(b => b.id === editingBook.id ? { ...b, ...bookData } : b));
     } else {
-      const newBook: BookType = {
-        id: Math.max(0, ...books.map(b => b.id)) + 1,
-        status: 'disponivel',
-        ...bookData as BookType
-      };
-      setBooks(prev => [...prev, newBook]);
+      const newBooks: BookType[] = [];
+      let nextId = Math.max(0, ...books.map(b => b.id)) + 1;
+      for (let i = 0; i < quantidade; i++) {
+        newBooks.push({
+          id: nextId++,
+          status: 'disponivel',
+          exemplar: i + 1,
+          ...bookData as BookType
+        });
+      }
+      setBooks(prev => [...prev, ...newBooks]);
     }
     setIsBookModalOpen(false);
     setEditingBook(null);
@@ -416,11 +423,11 @@ export default function App() {
     setError(null);
     const formData = new FormData(e.currentTarget);
     
-    const bookTitle = formData.get('livroTitulo') as string;
-    const book = books.find(b => b.titulo.toLowerCase() === bookTitle.toLowerCase());
+    const bookId = Number(formData.get('livroId'));
+    const book = books.find(b => b.id === bookId);
     
     if (!book) {
-      setError('Livro não encontrado pelo título.');
+      setError('Livro não selecionado corretamente.');
       return;
     }
 
@@ -492,6 +499,7 @@ export default function App() {
     if (book && citizen) {
       setPrefilledLoanData({ bookId: book.id, citizenCpf: citizen.cpf });
       setSelectedCitizenName(citizen.nome);
+      setSelectedLoanTitle(book.titulo);
       setIsLoanModalOpen(true);
     }
   };
@@ -1121,7 +1129,7 @@ WHERE E.data_devolucao_real IS NULL;`}
             <p className="text-sm text-slate-500 mb-2">{book.autor}</p>
             <div className="grid grid-cols-2 gap-y-2 text-xs text-slate-500 mb-4">
               <p><span className="font-medium text-slate-400">Editora:</span> {book.editora}</p>
-              <p><span className="font-medium text-slate-400">Volume:</span> {book.volume}</p>
+              <p><span className="font-medium text-slate-400">Volume:</span> {book.volume} {book.exemplar ? `(Exemplar ${book.exemplar})` : ''}</p>
               <p><span className="font-medium text-slate-400">Páginas:</span> {book.paginas}</p>
               <p><span className="font-medium text-slate-400">Tema:</span> {book.tema}</p>
             </div>
@@ -1198,6 +1206,12 @@ WHERE E.data_devolucao_real IS NULL;`}
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tema</label>
                     <input name="tema" defaultValue={editingBook?.tema} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                   </div>
+                  {!editingBook && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Quantidade de Exemplares</label>
+                      <input name="quantidade" type="number" min="1" defaultValue="1" required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    </div>
+                  )}
                 </div>
                 <div className="pt-4 flex gap-3">
                   <button type="button" onClick={() => setIsBookModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50">Cancelar</button>
@@ -1507,7 +1521,7 @@ WHERE E.data_devolucao_real IS NULL;`}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-2xl font-bold text-slate-900">Empréstimo</h2>
           <button 
-            onClick={() => { setSelectedCitizenName(''); setIsLoanModalOpen(true); }}
+            onClick={() => { setSelectedCitizenName(''); setSelectedLoanTitle(''); setIsLoanModalOpen(true); }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm w-fit"
           >
             <ClipboardList className="w-4 h-4" /> Novo Empréstimo
@@ -1729,7 +1743,7 @@ WHERE E.data_devolucao_real IS NULL;`}
             >
               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="text-lg font-bold">Novo Empréstimo</h3>
-                <button onClick={() => setIsLoanModalOpen(false)} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5" /></button>
+                <button onClick={() => { setIsLoanModalOpen(false); setSelectedLoanTitle(''); }} className="text-slate-400 hover:text-slate-600"><XCircle className="w-5 h-5" /></button>
               </div>
               <form onSubmit={handleSaveLoan} className="p-6 space-y-4">
                 {error && (
@@ -1743,20 +1757,44 @@ WHERE E.data_devolucao_real IS NULL;`}
                     <select 
                       name="livroTitulo" 
                       required 
-                      defaultValue={prefilledLoanData ? books.find(b => b.id === prefilledLoanData.bookId)?.titulo : ""}
+                      value={selectedLoanTitle}
+                      onChange={(e) => setSelectedLoanTitle(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                     >
-                      <option value="">Selecione um livro...</option>
-                      {books.filter(b => b.status === 'disponivel' || (prefilledLoanData && b.id === prefilledLoanData.bookId)).map(b => {
-                        const reservation = reservations.find(r => r.livroId === b.id && r.status === 'pendente');
-                        return (
-                          <option key={b.id} value={b.titulo}>
-                            {b.titulo} {reservation ? `(Reservado para ${citizens.find(c => c.cpf === reservation.cidadaoCpf)?.nome})` : ''}
-                          </option>
-                        );
-                      })}
+                      <option value="">Selecione um título...</option>
+                      {Array.from(new Set(books.filter(b => b.status === 'disponivel' || (prefilledLoanData && b.id === prefilledLoanData.bookId)).map(b => b.titulo))).map(titulo => (
+                        <option key={titulo} value={titulo}>{titulo}</option>
+                      ))}
                     </select>
                   </div>
+                  
+                  {selectedLoanTitle && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Volume / Exemplar Disponível</label>
+                      <select 
+                        name="livroId" 
+                        required 
+                        defaultValue={prefilledLoanData?.bookId || ""}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                      >
+                        <option value="">Selecione o volume/exemplar...</option>
+                        {books
+                          .filter(b => b.titulo === selectedLoanTitle && (b.status === 'disponivel' || (prefilledLoanData && b.id === prefilledLoanData.bookId)))
+                          .map(b => {
+                            const reservation = reservations.find(r => r.livroId === b.id && r.status === 'pendente');
+                            return (
+                              <option key={b.id} value={b.id}>
+                                Volume: {b.volume} {b.exemplar ? `- Exemplar ${b.exemplar}` : ''} {reservation ? `(Reservado para ${citizens.find(c => c.cpf === reservation.cidadaoCpf)?.nome})` : ''}
+                              </option>
+                            );
+                          })}
+                      </select>
+                    </motion.div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CPF do Cidadão</label>
@@ -1805,7 +1843,7 @@ WHERE E.data_devolucao_real IS NULL;`}
                   </div>
                 </div>
                 <div className="pt-4 flex gap-3">
-                  <button type="button" onClick={() => setIsLoanModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50">Cancelar</button>
+                  <button type="button" onClick={() => { setIsLoanModalOpen(false); setSelectedLoanTitle(''); }} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50">Cancelar</button>
                   <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">Registrar</button>
                 </div>
               </form>

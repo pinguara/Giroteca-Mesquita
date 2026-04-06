@@ -6,6 +6,7 @@ export interface BookType {
   autor: string;
   dataCadastro: string;
   volume: string;
+  exemplar?: number;
   paginas: number;
   editora: string;
   tema: string;
