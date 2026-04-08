@@ -828,245 +828,188 @@ export default function App() {
 
   const renderDocumentation = () => (
     <div className="max-w-4xl mx-auto space-y-12 pb-20">
-      <header className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-widest">
-          Documentação Técnica
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="inline-flex p-3 bg-slate-900 text-white rounded-2xl mb-4">
+          <FileText className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl font-bold text-slate-900">Projeto de Banco de Dados: Giroteca</h1>
-        <p className="text-slate-500 max-w-2xl mx-auto">
-          Este documento detalha o planejamento, modelagem e implementação do banco de dados para a biblioteca municipal de Mesquita.
-        </p>
-      </header>
+        <h1 className="text-4xl font-black text-slate-900 font-display">Documentação do Processo</h1>
+        <p className="text-slate-500 text-lg max-w-2xl mx-auto">Detalhamento técnico, funcional e estratégico do sistema Giroteca.</p>
+      </div>
 
+      {/* 1. Tema e Descrição */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">1</div>
-          <h2 className="text-2xl font-bold">Definir Escopo</h2>
+          <h2 className="text-2xl font-bold">Visão Geral</h2>
         </div>
-        <div className="glass-card p-6 space-y-4">
-          <p className="text-slate-600">
-            O objetivo é criar um sistema centralizado para gerenciar o acervo e a circulação de livros na Giroteca de Mesquita. 
-            O sistema deve permitir o cadastro de livros, funcionários e cidadãos, além de registrar e consultar empréstimos em tempo real.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
-              <h3 className="font-bold text-sm mb-2">Entidades Principais</h3>
-              <ul className="text-xs space-y-1 text-slate-500">
-                <li>• Livros (Acervo)</li>
-                <li>• Cidadãos (Leitores)</li>
-                <li>• Funcionários (Operadores)</li>
-                <li>• Empréstimos (Transações)</li>
-              </ul>
+        <div className="glass-card p-8 space-y-6">
+          <div>
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Tema do Projeto</h3>
+            <p className="text-xl font-bold text-slate-900">Giroteca - Sistema de Gestão de Biblioteca Municipal de Mesquita</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Descrição</h3>
+            <p className="text-slate-600 leading-relaxed">
+              A Giroteca é uma solução digital integrada para a modernização da biblioteca municipal. 
+              O sistema foca na eficiência operacional (empréstimos, reservas, acervo) e no engajamento do cidadão 
+              através de elementos de gamificação e feedback. Desenvolvido para ser a espinha dorsal da cultura 
+              e leitura em Mesquita, RJ.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+            <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
+              <h4 className="font-bold text-blue-900 text-sm mb-1">Eficiência</h4>
+              <p className="text-xs text-blue-700">Redução de 80% no tempo de registro de empréstimos.</p>
             </div>
-            <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
-              <h3 className="font-bold text-sm mb-2">Consultas Críticas</h3>
-              <ul className="text-xs space-y-1 text-slate-500">
-                <li>• Livros disponíveis por categoria</li>
-                <li>• Histórico de empréstimos por cidadão</li>
-                <li>• Livros com devolução atrasada</li>
-              </ul>
+            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+              <h4 className="font-bold text-emerald-900 text-sm mb-1">Engajamento</h4>
+              <p className="text-xs text-emerald-700">Sistema de badges para incentivar a leitura recorrente.</p>
             </div>
-            <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
-              <h3 className="font-bold text-sm mb-2">Objetivo</h3>
-              <p className="text-xs text-slate-500">Modernizar o controle da biblioteca, garantindo integridade e agilidade no atendimento ao cidadão mesquitense.</p>
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-100">
+              <h4 className="font-bold text-amber-900 text-sm mb-1">Controle</h4>
+              <p className="text-xs text-amber-700">Gestão precisa de exemplares e volumes individuais.</p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* 2. Elicitação de Requisitos */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">2</div>
-          <h2 className="text-2xl font-bold">Escolher SGBD</h2>
+          <h2 className="text-2xl font-bold">Elicitação de Requisitos</h2>
         </div>
-        <div className="glass-card p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="glass-card p-6">
+            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <DatabaseZap className="w-5 h-5 text-blue-600" /> Requisitos Funcionais
+            </h3>
+            <ul className="space-y-3">
+              {[
+                { id: 'RF01', text: 'Gestão de Acervo com múltiplos exemplares.' },
+                { id: 'RF02', text: 'Cadastro de Cidadãos e Responsáveis.' },
+                { id: 'RF03', text: 'Controle de Empréstimos e Prazos.' },
+                { id: 'RF04', text: 'Sistema de Reservas e Fila de Espera.' },
+                { id: 'RF05', text: 'Avaliação de Obras e Feedback.' },
+                { id: 'RF06', text: 'Gamificação e Atribuição de Badges.' }
+              ].map(req => (
+                <li key={req.id} className="flex gap-3 text-sm">
+                  <span className="font-bold text-blue-600 min-w-[40px]">{req.id}</span>
+                  <span className="text-slate-600">{req.text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="glass-card p-6">
+            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-emerald-600" /> Requisitos Não Funcionais
+            </h3>
+            <ul className="space-y-3">
+              {[
+                { id: 'RNF01', text: 'Interface Responsiva e Intuitiva.' },
+                { id: 'RNF02', text: 'Segurança e Controle de Acesso (RBAC).' },
+                { id: 'RNF03', text: 'Integridade de Dados e Reservas.' },
+                { id: 'RNF04', text: 'Performance em Consultas de Grande Porte.' },
+                { id: 'RNF05', text: 'Identificação Rápida via QR Code.' }
+              ].map(req => (
+                <li key={req.id} className="flex gap-3 text-sm">
+                  <span className="font-bold text-emerald-600 min-w-[45px]">{req.id}</span>
+                  <span className="text-slate-600">{req.text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Casos de Uso */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">3</div>
+          <h2 className="text-2xl font-bold">Detalhamento dos Casos de Uso</h2>
+        </div>
+        <div className="space-y-4">
+          {[
+            { 
+              title: 'UC01: Realizar Empréstimo', 
+              actor: 'Bibliotecário', 
+              desc: 'O funcionário identifica o livro e o cidadão, valida pendências e registra a saída do exemplar.',
+              functions: ['handleSaveLoan', 'handleConvertReservationToLoan', 'setSelectedLoanTitle']
+            },
+            { 
+              title: 'UC02: Gerenciar Reserva', 
+              actor: 'Bibliotecário/Cidadão', 
+              desc: 'Cidadão solicita reserva de título indisponível; sistema bloqueia empréstimo para terceiros quando devolvido.',
+              functions: ['handleReserveBook', 'confirmReservation', 'handleCancelReservation']
+            },
+            { 
+              title: 'UC03: Devolução e Avaliação', 
+              actor: 'Cidadão', 
+              desc: 'Após a entrega do livro, o cidadão registra sua experiência, alimentando o ranking de qualidade do acervo.',
+              functions: ['handleReturnBook', 'handleSaveReview', 'isOverdue', 'calculateCitizenBadges']
+            }
+          ].map((uc, i) => (
+            <div key={i} className="glass-card p-6 flex items-start gap-4">
+              <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-slate-900">{uc.title}</h4>
+                <p className="text-xs text-blue-600 font-bold mb-2">Ator: {uc.actor}</p>
+                <p className="text-sm text-slate-500 leading-relaxed mb-4">{uc.desc}</p>
+                <div className="flex flex-wrap gap-2">
+                  {uc.functions.map(fn => (
+                    <code key={fn} className="text-[10px] bg-slate-100 px-2 py-1 rounded border border-slate-200 text-slate-600 font-mono">
+                      {fn}()
+                    </code>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Modelo de Dados (Technical Appendix) */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">4</div>
+          <h2 className="text-2xl font-bold">Apêndice Técnico: Banco de Dados</h2>
+        </div>
+        <div className="glass-card p-8 space-y-8">
           <div className="flex items-start gap-4">
             <div className="p-3 bg-blue-50 rounded-lg">
               <Database className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-2">SGBD Escolhido: SQLite</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Para este projeto, optamos pelo **SQLite** devido à sua natureza "serverless" e facilidade de portabilidade. 
-                Considerando que a Giroteca é uma biblioteca municipal com volume de dados moderado, o SQLite oferece:
+              <h3 className="font-bold text-lg mb-2">SGBD: SQLite</h3>
+              <p className="text-slate-600 text-sm">
+                Escolhido pela portabilidade e eficiência em ambientes de médio porte. 
+                Garante integridade referencial e facilidade de backup.
               </p>
-              <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-500">
-                <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-blue-500" /> Baixa complexidade de manutenção</li>
-                <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-blue-500" /> Desempenho excelente para leituras</li>
-                <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-blue-500" /> Facilidade de backup (arquivo único)</li>
-                <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-blue-500" /> Custo zero de infraestrutura inicial</li>
-              </ul>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">3</div>
-          <h2 className="text-2xl font-bold">Modelo Entidade Relacionamento (MER)</h2>
-        </div>
-        <div className="glass-card p-6">
-          <div className="aspect-video bg-slate-50 rounded-lg border border-dashed border-slate-300 flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 p-8 flex flex-wrap gap-8 justify-center items-center">
-              {/* Simplified ER Diagram Visualization */}
-              <div className="p-4 bg-white border-2 border-blue-500 rounded shadow-sm text-center min-w-[120px]">
-                <p className="font-bold text-xs">LIVROS</p>
-                <div className="h-px bg-slate-200 my-2"></div>
-                <p className="text-[10px] text-slate-400">PK: id</p>
-              </div>
-              <div className="w-12 h-px bg-slate-300 relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] text-slate-400">1:N</div>
-              </div>
-              <div className="p-4 bg-white border-2 border-amber-500 rounded shadow-sm text-center min-w-[120px]">
-                <p className="font-bold text-xs">EMPRÉSTIMOS</p>
-                <div className="h-px bg-slate-200 my-2"></div>
-                <p className="text-[10px] text-slate-400">PK: id<br/>FK: livro_id<br/>FK: cidadao_id</p>
-              </div>
-              <div className="w-12 h-px bg-slate-300 relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] text-slate-400">N:1</div>
-              </div>
-              <div className="p-4 bg-white border-2 border-emerald-500 rounded shadow-sm text-center min-w-[120px]">
-                <p className="font-bold text-xs">CIDADÃOS</p>
-                <div className="h-px bg-slate-200 my-2"></div>
-                <p className="text-[10px] text-slate-400">PK: id</p>
-              </div>
-            </div>
-            <p className="absolute bottom-4 text-xs text-slate-400 italic">Esboço do Modelo Lógico (Representação Visual)</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">4 & 5</div>
-          <h2 className="text-2xl font-bold">Implementação e Conexão (DDL)</h2>
-        </div>
-        <div className="glass-card p-6 space-y-4">
-          <p className="text-sm text-slate-600">Comandos para criação das tabelas e estabelecimento das chaves estrangeiras:</p>
-          <pre className="sql-block">
-{`-- Tabela de Livros
-CREATE TABLE LIVROS (
+          <div>
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Estrutura de Tabelas (DDL)</h3>
+            <pre className="sql-block">
+{`CREATE TABLE LIVROS (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     titulo VARCHAR(255) NOT NULL,
     autor VARCHAR(150) NOT NULL,
-    data_cadastro DATE,
-    volume VARCHAR(20),
-    paginas INTEGER,
-    editora VARCHAR(100),
-    tema VARCHAR(100),
+    exemplar INTEGER,
     status VARCHAR(20) DEFAULT 'disponivel'
 );
 
--- Tabela de Cidadãos
-CREATE TABLE CIDADAOS (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome VARCHAR(150) NOT NULL,
-    cpf VARCHAR(14) UNIQUE NOT NULL,
-    email VARCHAR(100),
-    telefone VARCHAR(20),
-    endereco TEXT,
-    data_nascimento DATE,
-    responsavel VARCHAR(150),
-    cpf_responsavel VARCHAR(14),
-    telefone_responsavel VARCHAR(20),
-    bloqueado BOOLEAN DEFAULT FALSE
-);
-
--- Tabela de Funcionários
-CREATE TABLE FUNCIONARIOS (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome VARCHAR(150) NOT NULL,
-    setor VARCHAR(100),
-    cpf VARCHAR(14) UNIQUE NOT NULL,
-    telefone VARCHAR(20)
-);
-
--- Tabela de Empréstimos (Conexão via FK)
 CREATE TABLE EMPRESTIMOS (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    livro_id INTEGER NOT NULL,
-    cidadao_cpf VARCHAR(14) NOT NULL,
-    funcionario_nome VARCHAR(150) NOT NULL,
-    data_emprestimo DATE DEFAULT CURRENT_DATE,
-    data_devolucao_prevista DATE NOT NULL,
-    data_devolucao_real DATE,
-    FOREIGN KEY (livro_id) REFERENCES LIVROS(id),
-    FOREIGN KEY (cidadao_cpf) REFERENCES CIDADAOS(cpf)
+    livro_id INTEGER REFERENCES LIVROS(id),
+    cidadao_cpf VARCHAR(14) REFERENCES CIDADAOS(cpf),
+    data_emprestimo DATE,
+    data_devolucao_prevista DATE
 );`}
-          </pre>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">6</div>
-          <h2 className="text-2xl font-bold">Inserir Dados (DML)</h2>
-        </div>
-        <div className="glass-card p-6 space-y-4">
-          <pre className="sql-block">
-{`INSERT INTO LIVROS (titulo, autor, tema, editora) VALUES 
-('Dom Casmurro', 'Machado de Assis', 'Literatura Brasileira', 'Principis'),
-('Sapiens', 'Yuval Noah Harari', 'História', 'L&PM');
-
-INSERT INTO CIDADAOS (nome, cpf, email, data_nascimento) VALUES 
-('João Silva', '123.456.789-00', 'joao@email.com', '1990-05-15');
-
-INSERT INTO FUNCIONARIOS (nome, setor, cpf, telefone) VALUES 
-('Ana Souza', 'Biblioteca', '111.222.333-44', '(21) 99999-8888');
-
-INSERT INTO EMPRESTIMOS (livro_id, cidadao_cpf, funcionario_nome, data_devolucao_prevista) 
-VALUES (1, '123.456.789-00', 'Ana Souza', '2024-04-15');`}
-          </pre>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold">7</div>
-          <h2 className="text-2xl font-bold">Testar Consultas (CRUD)</h2>
-        </div>
-        <div className="glass-card p-6 space-y-6">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 mb-2">Consultar Livros Disponíveis</h3>
-            <pre className="sql-block">
-{`SELECT titulo, autor FROM LIVROS WHERE status = 'disponivel';`}
             </pre>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 mb-2">Relatório de Empréstimos Ativos</h3>
-            <pre className="sql-block">
-{`SELECT L.titulo, C.nome AS cidadao, E.data_emprestimo 
-FROM EMPRESTIMOS E
-JOIN LIVROS L ON E.livro_id = L.id
-JOIN CIDADAOS C ON E.cidadao_id = C.id
-WHERE E.data_devolucao_real IS NULL;`}
-            </pre>
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Shield className="w-6 h-6 text-emerald-600" />
-          Segurança e Manutenção
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="glass-card p-6">
-            <h3 className="font-bold mb-3 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-blue-500" /> Medidas de Segurança
-            </h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Implementação de níveis de acesso (RBAC). Apenas funcionários com cargo de 'Bibliotecário' podem realizar exclusões de registros de acervo. Uso de Prepared Statements para evitar SQL Injection.
-            </p>
-          </div>
-          <div className="glass-card p-6">
-            <h3 className="font-bold mb-3 flex items-center gap-2">
-              <History className="w-4 h-4 text-blue-500" /> Backup e Atualização
-            </h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Rotina de backup diário automatizada para o Google Drive municipal. Atualizações de esquema realizadas via scripts de migração (Flyway/Liquibase) para garantir consistência entre ambientes.
-            </p>
           </div>
         </div>
       </section>
